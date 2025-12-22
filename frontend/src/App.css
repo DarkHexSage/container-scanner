@@ -1,0 +1,291 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.scanner {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 32px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.scan-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.input-field {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.input-field:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.scan-btn {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.scan-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.scan-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-box {
+  background: #ffebee;
+  border-left: 4px solid #e53935;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #c62828;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-icon {
+  font-size: 20px;
+}
+
+.results {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.result-header h2 {
+  color: #333;
+}
+
+.image-name {
+  background: #f5f5f5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  color: #666;
+  font-size: 14px;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  color: white;
+  font-weight: 600;
+}
+
+.summary-card.critical {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+}
+
+.summary-card.high {
+  background: linear-gradient(135deg, #fb8c00 0%, #e65100 100%);
+}
+
+.summary-card.medium {
+  background: linear-gradient(135deg, #fdd835 0%, #f9a825 100%);
+}
+
+.summary-card.low {
+  background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+}
+
+.summary-card .number {
+  font-size: 28px;
+  margin-bottom: 5px;
+}
+
+.summary-card .label {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.success-box {
+  background: #e8f5e9;
+  border-left: 4px solid #43a047;
+  padding: 16px;
+  border-radius: 8px;
+  color: #2e7d32;
+  font-weight: 600;
+  text-align: center;
+}
+
+.vulnerabilities-list {
+  margin-top: 30px;
+}
+
+.vulnerabilities-list h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.vulnerability-item {
+  background: #fafafa;
+  border-left: 4px solid #e0e0e0;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.vulnerability-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vuln-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.severity-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vuln-id {
+  font-family: 'Monaco', 'Courier New', monospace;
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vulnerability-item h4 {
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.description {
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.vuln-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail {
+  color: #555;
+  font-size: 13px;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.detail strong {
+  color: #333;
+  margin-right: 8px;
+}
+
+@media (max-width: 600px) {
+  .scanner {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .scan-form {
+    flex-direction: column;
+  }
+
+  .scan-btn {
+    width: 100%;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
