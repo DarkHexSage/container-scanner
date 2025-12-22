@@ -122,6 +122,8 @@ container-scanner/
 
 
 ## Screenshots
+<img width="1038" height="959" alt="image" src="https://github.com/user-attachments/assets/e15f92f2-72fe-42dd-b375-0fb39a3498dd" />
+<img width="1010" height="585" alt="image" src="https://github.com/user-attachments/assets/4b717e81-c1b2-4ef2-8eb1-14b6f9ad47d7" />
 
 ---
 
