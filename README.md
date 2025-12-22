@@ -120,6 +120,9 @@ container-scanner/
 - CORS enabled for frontend communication
 - No sensitive data stored
 
+
+## Screenshots
+
 ---
 
 **Built for:** Full-stack security engineering portfolio
