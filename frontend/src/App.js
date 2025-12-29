@@ -37,18 +37,18 @@ function App() {
 
   const getSeverityColor = (severity) => {
     switch(severity) {
-      case 'CRITICAL': return '#e53935';
-      case 'HIGH': return '#fb8c00';
-      case 'MEDIUM': return '#fdd835';
-      case 'LOW': return '#43a047';
-      default: return '#666';
+      case 'CRITICAL': return '#ef4444';
+      case 'HIGH': return '#f97316';
+      case 'MEDIUM': return '#eab308';
+      case 'LOW': return '#22c55e';
+      default: return '#64748b';
     }
   };
 
   return (
     <div className="container">
       <div className="scanner">
-        <h1>🔐 Container Security Scanner</h1>
+        <h1>Container Security Scanner</h1>
         <p className="subtitle">Scan Docker images for vulnerabilities using Trivy</p>
 
         <form onSubmit={handleScan} className="scan-form">
@@ -67,8 +67,8 @@ function App() {
 
         {error && (
           <div className="error-box">
-            <span className="error-icon">⚠️</span>
-            {error}
+            <span className="error-icon">⚠</span>
+            <span>{error}</span>
           </div>
         )}
 
@@ -126,7 +126,7 @@ function App() {
               </div>
             ) : (
               <div className="success-box">
-                ✅ No vulnerabilities found!
+                ✓ No vulnerabilities found!
               </div>
             )}
           </div>
