@@ -2,6 +2,7 @@
 FROM node:18-alpine AS builder
 
 WORKDIR /app
+ARG PUBLIC_URL=/
 
 COPY package.json package-lock.json* ./
 
@@ -10,7 +11,7 @@ RUN npm install
 COPY public ./public
 COPY src ./src
 
-RUN npm run build
+RUN npm run build -- --public-url=$PUBLIC_URL
 
 # Production stage
 FROM nginx:alpine
