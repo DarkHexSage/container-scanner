@@ -7,9 +7,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-
-    const API_BASE = process.env.REACT_APP_API_URL || '/container-scanner/api';
-
+  const API_BASE = process.env.REACT_APP_API_URL || '/container-scanner/api';
   const handleScan = async (e) => {
     e.preventDefault();
     
