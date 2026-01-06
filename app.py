@@ -197,16 +197,7 @@ def _run_trivy_scan(image: str) -> dict:
         # --vuln-type: os,library to find both OS and application vulns
         # --format json: structured output
         # --offline-db: use offline DB for reliability
-        cmd = [
-            'trivy', 'image',
-            '--format', 'json',
-            '--severity', 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN',
-            '--vuln-type', 'os,library',
-            '--exit-code', '0',  # Don't fail on vulnerabilities
-            '--quiet',
-            image
-        ]
-        
+        cmd = ['trivy', 'image', '--format', 'json', '--severity', 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN', '--vuln-type', 'os,library', '--detection-priority', 'comprehensive', '--exit-code', '0', '--quiet', image]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # Extended timeout
         
         if result.returncode not in [0, 1]:  # 1 is expected when vulns found
