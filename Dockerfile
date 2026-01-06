@@ -15,7 +15,7 @@ RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/
     trivy image --download-db-only
 
 # Pre-warm the vulnerability database for better first-scan performance
-RUN trivy image --severity CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN --format json --quiet alpine:latest > /dev/null 2>&1 || true
+RUN trivy image --download-db-only && trivy image --detection-priority comprehensive --severity CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN --format json --quiet alpine:latest > /dev/null 2>&1 || true
 
 WORKDIR /app
 
