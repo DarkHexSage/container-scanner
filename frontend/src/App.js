@@ -78,7 +78,7 @@ function App() {
     <div className="container">
       <div className="scanner">
         <div className="header-section">
-          <h1>🔐 Container Security Scanner</h1>
+          <h1>Container Security Scanner</h1>
           <p className="subtitle">Scan Docker images for vulnerabilities using Trivy</p>
           
           {trivyStatus && (
@@ -128,6 +128,12 @@ function App() {
 
         {result && (
           <div className="results">
+            {result.warning && (
+              <div className="warning-box">
+                <span className="warning-icon">⚠️</span>
+                <span>{result.warning}</span>
+              </div>
+            )}
             <div className="result-header">
               <div>
                 <h2>Scan Results</h2>
@@ -210,11 +216,26 @@ function App() {
                         <div className="detail references">
                           <strong>References:</strong>
                           <div className="ref-list">
-                            {vuln.references.map((ref, i) => (
-                              <a key={i} href={ref} target="_blank" rel="noopener noreferrer" className="ref-link">
-                                {ref.replace('https://', '').replace('http://', '').split('/')[0]}
-                              </a>
-                            ))}
+                            {vuln.references.map((ref, i) => {
+                              let displayName = ref.replace('https://', '').replace('http://', '').split('/')[0];
+                              if (ref.includes('cve.mitre')) displayName = '🔗 CVE MITRE';
+                              if (ref.includes('nvd.nist')) displayName = '🔗 NVD NIST';
+                              if (ref.includes('ubuntu.com')) displayName = '🔗 Ubuntu';
+                              if (ref.includes('debian')) displayName = '🔗 Debian';
+                              if (ref.includes('redhat')) displayName = '🔗 Red Hat';
+                              if (ref.includes('openwall')) displayName = '🔗 OpenWall';
+                              if (ref.includes('bugzilla')) displayName = '🔗 Bugzilla';
+                              if (ref.includes('rockyl')) displayName = '🔗 Rocky';
+                              if (ref.includes('almalinux')) displayName = '🔗 AlmaLinux';
+                              if (ref.includes('oracle')) displayName = '🔗 Oracle';
+                              if (ref.includes('sourceware')) displayName = '🔗 SourceWare';
+                              
+                              return (
+                                <a key={i} href={ref} target="_blank" rel="noopener noreferrer" className="ref-link" title={ref}>
+                                  {displayName}
+                                </a>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
