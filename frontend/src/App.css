@@ -232,6 +232,27 @@ h1 {
   animation: slideIn 0.3s ease;
 }
 
+.warning-box {
+  background: rgba(255, 165, 0, 0.1);
+  border: 2px solid rgba(255, 165, 0, 0.4);
+  padding: 16px 20px;
+  border-radius: 6px;
+  margin-bottom: 25px;
+  color: #ffb84d;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  font-family: 'Courier New', monospace;
+  animation: slideIn 0.3s ease;
+}
+
+.warning-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
 .error-icon {
   font-size: 18px;
   flex-shrink: 0;
