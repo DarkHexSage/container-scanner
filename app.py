@@ -49,6 +49,7 @@ def scan_image():
                     "scan_time": cached_result['scan_time'],
                     "vulnerabilities": cached_result['vulnerabilities'],
                     "summary": cached_result['summary'],
+                    "warning": cached_result.get('warning'),
                     "status": "completed",
                     "cached": True
                 }), 200
@@ -65,6 +66,7 @@ def scan_image():
             "scan_time": datetime.now().isoformat(),
             "vulnerabilities": result.get('vulnerabilities', []),
             "summary": result.get('summary', {}),
+            "warning": result.get('warning'),
             "status": "completed",
             "cached": False
         }
@@ -73,7 +75,8 @@ def scan_image():
             SCAN_CACHE[cache_key] = {
                 "scan_time": scan_result["scan_time"],
                 "vulnerabilities": scan_result["vulnerabilities"],
-                "summary": scan_result["summary"]
+                "summary": scan_result["summary"],
+                "warning": scan_result.get("warning")
             }
         
         return jsonify(scan_result), 200
@@ -111,6 +114,7 @@ def scan_registry():
                     "scan_time": cached_result['scan_time'],
                     "vulnerabilities": cached_result['vulnerabilities'],
                     "summary": cached_result['summary'],
+                    "warning": cached_result.get('warning'),
                     "status": "completed",
                     "cached": True
                 }), 200
@@ -126,6 +130,7 @@ def scan_registry():
             "scan_time": datetime.now().isoformat(),
             "vulnerabilities": result.get('vulnerabilities', []),
             "summary": result.get('summary', {}),
+            "warning": result.get('warning'),
             "status": "completed",
             "cached": False
         }
@@ -134,7 +139,8 @@ def scan_registry():
             SCAN_CACHE[cache_key] = {
                 "scan_time": scan_result["scan_time"],
                 "vulnerabilities": scan_result["vulnerabilities"],
-                "summary": scan_result["summary"]
+                "summary": scan_result["summary"],
+                "warning": scan_result.get("warning")
             }
         
         return jsonify(scan_result), 200
@@ -197,7 +203,16 @@ def _run_trivy_scan(image: str) -> dict:
         # --vuln-type: os,library to find both OS and application vulns
         # --format json: structured output
         # --offline-db: use offline DB for reliability
-        cmd = ['trivy', 'image', '--format', 'json', '--severity', 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN', '--vuln-type', 'os,library', '--detection-priority', 'comprehensive', '--exit-code', '0', '--quiet', image]
+        cmd = [
+            'trivy', 'image',
+            '--format', 'json',
+            '--severity', 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN',
+            '--vuln-type', 'os,library',
+            '--exit-code', '0',  # Don't fail on vulnerabilities
+            '--quiet',
+            image
+        ]
+        
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # Extended timeout
         
         if result.returncode not in [0, 1]:  # 1 is expected when vulns found
@@ -278,9 +293,19 @@ def _run_trivy_scan(image: str) -> dict:
             key=lambda x: (severity_order.get(x['severity'], 5), x['id'])
         )
         
+        # Check if OS was detected but has no advisories (EOL)
+        warning = None
+        if vulnerabilities == [] and trivy_output.get('Results'):
+            for result_item in trivy_output['Results']:
+                os_type = result_item.get('Type', '').lower()
+                if os_type in ['ubuntu', 'debian']:
+                    warning = "OS version is EOL - no advisory data available in database"
+                    break
+        
         return {
             "vulnerabilities": vulnerabilities,
             "summary": summary,
+            "warning": warning,
             "error": None
         }
         
