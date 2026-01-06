@@ -23,14 +23,14 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
-    # Resource limits (adjust based on your hardware)
+    # Resource limits for single-CPU systems
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 2G
+          cpus: '0.75'
+          memory: 1536M
         reservations:
-          cpus: '1'
+          cpus: '0.50'
           memory: 1G
 
   frontend:
@@ -56,14 +56,14 @@ services:
       retries: 3
       start_period: 20s
     restart: unless-stopped
-    # Resource limits
+    # Resource limits for single-CPU systems
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 512M
+          cpus: '0.25'
+          memory: 384M
         reservations:
-          cpus: '0.5'
+          cpus: '0.15'
           memory: 256M
 
 volumes:
