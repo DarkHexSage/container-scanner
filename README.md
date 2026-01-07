@@ -24,6 +24,7 @@ A blazingly fast vulnerability scanner for Docker container images powered by Tr
 - [How It Works](#-how-it-works)
 - [Security](#-security)
 - [Recommendations](#-recommendations)
+- [Demo](#-demo)
 
 ---
 
@@ -308,7 +309,12 @@ deploy:
 ---
 
 ---
+---
 ## Demo
+
+https://github.com/user-attachments/assets/2c78d4bd-e462-438f-be4b-f150c7a955dd
+---
+
 
 ---
 
