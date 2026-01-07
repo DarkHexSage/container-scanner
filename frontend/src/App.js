@@ -246,7 +246,7 @@ function App() {
         )}
 
         <div className="footer-info">
-          <p>💡 <strong>Tip:</strong> First scan takes longer (downloads image + DB update). Subsequent scans use cache (refreshed hourly).</p>
+          <p>💡 <strong>Tip:</strong> First scan takes 30-90s. Repeated scans cached for 1 hour and return in <500ms.</p>
           <p>📊 Supports all registries: Docker Hub, ECR, GCR, custom registries</p>
         </div>
       </div>
