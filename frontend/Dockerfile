@@ -1,35 +1,38 @@
-# Build stage
-FROM node:18-alpine AS builder
+# Multi-stage build
+FROM node:18-alpine AS frontend-build
 
 WORKDIR /app
-ARG PUBLIC_URL=/
 
-COPY package.json package-lock.json* ./
+# Copy package files
+COPY package*.json ./
 
-RUN npm install
+# Install dependencies
+RUN npm ci
 
+# Copy source
 COPY public ./public
 COPY src ./src
 
-RUN npm run build -- --public-url=$PUBLIC_URL
+# Build
+RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:18-alpine
 
-COPY --from=builder /app/build /usr/share/nginx/html
+WORKDIR /app
 
-# Configure nginx to serve React app
-RUN echo 'server { \
-  listen 3000; \
-  location / { \
-    root /usr/share/nginx/html; \
-    try_files $uri /index.html; \
-  } \
-  location /api { \
-    proxy_pass http://backend:5000; \
-  } \
-}' > /etc/nginx/conf.d/default.conf
+# Install serve to run built app
+RUN npm install -g serve
 
+# Copy built app from build stage
+COPY --from=frontend-build /app/build ./build
+
+# Expose port
 EXPOSE 3000
 
-CMD ["nginx", "-g", "daemon off;"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# Run serve
+CMD ["serve", "-s", "build", "-l", "3000"]
