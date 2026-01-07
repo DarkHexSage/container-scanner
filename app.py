@@ -12,7 +12,18 @@ CORS(app)
 
 # Cache for scan results to avoid duplicate scans
 SCAN_CACHE = {}
-CACHE_LOCK = threading.Lock()
+SCAN_CACHE_LOCK = threading.Lock()
+CACHE_EXPIRY = 3600  # 1 hour in seconds
+
+def _is_cache_expired(scan_time):
+    """Check if cached result is older than CACHE_EXPIRY"""
+    cached_timestamp = datetime.fromisoformat(scan_time)
+    return (datetime.now() - cached_timestamp).total_seconds() > CACHE_EXPIRY
+
+def _get_cache_age_hours(scan_time):
+    """Get cache age in hours"""
+    cached_timestamp = datetime.fromisoformat(scan_time)
+    return round((datetime.now() - cached_timestamp).total_seconds() / 3600, 1)
 
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -44,15 +55,21 @@ def scan_image():
         with SCAN_CACHE_LOCK:
             if cache_key in SCAN_CACHE:
                 cached_result = SCAN_CACHE[cache_key]
-                return jsonify({
-                    "image": image,
-                    "scan_time": cached_result['scan_time'],
-                    "vulnerabilities": cached_result['vulnerabilities'],
-                    "summary": cached_result['summary'],
-                    "warning": cached_result.get('warning'),
-                    "status": "completed",
-                    "cached": True
-                }), 200
+                # Check if cache expired
+                if not _is_cache_expired(cached_result['scan_time']):
+                    return jsonify({
+                        "image": image,
+                        "scan_time": cached_result['scan_time'],
+                        "vulnerabilities": cached_result['vulnerabilities'],
+                        "summary": cached_result['summary'],
+                        "warning": cached_result.get('warning'),
+                        "status": "completed",
+                        "cached": True,
+                        "cache_age_hours": _get_cache_age_hours(cached_result['scan_time'])
+                    }), 200
+                else:
+                    # Cache expired, delete it
+                    del SCAN_CACHE[cache_key]
         
         # Run Trivy scan
         result = _run_trivy_scan(image)
@@ -68,7 +85,8 @@ def scan_image():
             "summary": result.get('summary', {}),
             "warning": result.get('warning'),
             "status": "completed",
-            "cached": False
+            "cached": False,
+            "cache_age_hours": None
         }
         
         with SCAN_CACHE_LOCK:
@@ -109,15 +127,21 @@ def scan_registry():
         with SCAN_CACHE_LOCK:
             if cache_key in SCAN_CACHE:
                 cached_result = SCAN_CACHE[cache_key]
-                return jsonify({
-                    "image": full_image,
-                    "scan_time": cached_result['scan_time'],
-                    "vulnerabilities": cached_result['vulnerabilities'],
-                    "summary": cached_result['summary'],
-                    "warning": cached_result.get('warning'),
-                    "status": "completed",
-                    "cached": True
-                }), 200
+                # Check if cache expired
+                if not _is_cache_expired(cached_result['scan_time']):
+                    return jsonify({
+                        "image": full_image,
+                        "scan_time": cached_result['scan_time'],
+                        "vulnerabilities": cached_result['vulnerabilities'],
+                        "summary": cached_result['summary'],
+                        "warning": cached_result.get('warning'),
+                        "status": "completed",
+                        "cached": True,
+                        "cache_age_hours": _get_cache_age_hours(cached_result['scan_time'])
+                    }), 200
+                else:
+                    # Cache expired, delete it
+                    del SCAN_CACHE[cache_key]
         
         result = _run_trivy_scan(full_image)
         
@@ -132,7 +156,8 @@ def scan_registry():
             "summary": result.get('summary', {}),
             "warning": result.get('warning'),
             "status": "completed",
-            "cached": False
+            "cached": False,
+            "cache_age_hours": None
         }
         
         with SCAN_CACHE_LOCK:
@@ -161,7 +186,6 @@ def _validate_image_name(image: str) -> bool:
     """Validate Docker image name format"""
     if not image or len(image) == 0:
         return False
-    # Basic validation - improve as needed
     return True
 
 def _get_trivy_status() -> dict:
@@ -198,24 +222,21 @@ def _run_trivy_scan(image: str) -> dict:
                 "status": "trivy_not_found"
             }
         
-        # Enhanced Trivy command with better vulnerability detection:
-        # --severity: ALL to capture all severity levels
-        # --vuln-type: os,library to find both OS and application vulns
-        # --format json: structured output
-        # --offline-db: use offline DB for reliability
+        # Enhanced Trivy command with better vulnerability detection
         cmd = [
             'trivy', 'image',
             '--format', 'json',
             '--severity', 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN',
             '--vuln-type', 'os,library',
-            '--exit-code', '0',  # Don't fail on vulnerabilities
+            '--detection-priority', 'comprehensive',
+            '--exit-code', '0',
             '--quiet',
             image
         ]
         
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # Extended timeout
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
         
-        if result.returncode not in [0, 1]:  # 1 is expected when vulns found
+        if result.returncode not in [0, 1]:
             return {
                 "error": f"Trivy scan failed: {result.stderr}",
                 "status": "scan_failed"
@@ -225,7 +246,6 @@ def _run_trivy_scan(image: str) -> dict:
         try:
             trivy_output = json.loads(result.stdout)
         except json.JSONDecodeError:
-            # If JSON parsing fails, try to extract useful info from stderr
             if "database" in result.stderr.lower() or "metadata" in result.stderr.lower():
                 return {
                     "error": "Trivy database issue - updating vulnerability database. Please try again.",
@@ -320,8 +340,5 @@ def _run_trivy_scan(image: str) -> dict:
             "status": "exception"
         }
 
-# Create thread-safe lock for cache
-SCAN_CACHE_LOCK = threading.Lock()
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)  # Production mode
+    app.run(host='0.0.0.0', port=5000, debug=False)
