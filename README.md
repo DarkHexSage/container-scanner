@@ -25,6 +25,7 @@ A blazingly fast vulnerability scanner for Docker container images powered by Tr
 - [Security](#-security)
 - [Recommendations](#-recommendations)
 - [Demo](#-demo)
+- [License](#-license)
 
 ---
 
@@ -32,9 +33,10 @@ A blazingly fast vulnerability scanner for Docker container images powered by Tr
 
 - **Real-time Scanning** - Detect CVEs, misconfigurations, and exposed secrets instantly
 - **Severity Classification** - CRITICAL, HIGH, MEDIUM, LOW with CVSS scores
-- **Smart Caching** - Sub-500ms scans for repeated images
+- **Smart Caching** - Sub-500ms scans for repeated images (1 hour expiry)
 - **Complete Metadata** - CVE IDs, CWE numbers, publication dates, and references
 - **EOL Detection** - Warnings for end-of-life OS versions
+- **Pagination** - Shows 50 vulns per page (prevents browser crashes on 9k+ vulns)
 - **Production Ready** - Single-CPU optimized with Gunicorn workers
 - **Beautiful UI** - Dark-themed, responsive interface with animations
 - **Thread-Safe** - Concurrent request handling with proper locking
@@ -93,7 +95,7 @@ npm start  # Runs on http://localhost:3000
 | Framework | Flask | 3.0.0 |
 | Server | Gunicorn | 21.2.0 |
 | CORS | Flask-CORS | 4.0.0 |
-| Caching | In-Memory (Thread-Safe) | - |
+| Caching | In-Memory (Thread-Safe, 1hr expiry) | - |
 
 ### Scanner & Infrastructure
 | Component | Technology | Details |
@@ -155,8 +157,10 @@ php:5.6                  ❌  300+ vulns       Pre-Historic
 |----------|------|-------|
 | **First Scan** | 30-90s | Downloads image + pre-warms database |
 | **Cached Scan** | <500ms | In-memory result, instant response |
+| **Cache Expiry** | 1 hour | Auto-refreshes after 1 hour |
 | **Database Update** | Auto | Trivy DB updates daily automatically |
 | **Concurrent Requests** | 2 workers | Handles multiple scans simultaneously |
+| **Pagination** | 50 vulns/page | Prevents browser crashes |
 
 ---
 
@@ -178,6 +182,8 @@ php:5.6                  ❌  300+ vulns       Pre-Historic
 {
   "image": "ubuntu:22.04",
   "scan_time": "2025-01-06T22:50:00Z",
+  "cached": false,
+  "cache_age_hours": null,
   "vulnerabilities": [
     {
       "id": "CVE-2025-4802",
@@ -195,10 +201,11 @@ php:5.6                  ❌  300+ vulns       Pre-Historic
     "high": 1,
     "medium": 3,
     "low": 5,
+    "unknown": 0,
     "total": 9
   },
   "warning": null,
-  "cached": false
+  "status": "completed"
 }
 ```
 
@@ -225,6 +232,14 @@ php:5.6                  ❌  300+ vulns       Pre-Historic
 timeout=600  # Change to 300, 900, 1200 (seconds)
 ```
 
+### Adjust Cache Expiry
+
+**File:** `app.py` (top of file)
+
+```python
+CACHE_EXPIRY = 3600  # Change to 1800 (30min), 7200 (2hrs), etc
+```
+
 ### Adjust Worker Count
 
 **File:** `Dockerfile` (CMD line)
@@ -245,6 +260,8 @@ deploy:
       memory: 1536M     # Adjust memory allocation
 ```
 
+---
+
 ## 📝 How It Works
 
 ```
@@ -253,8 +270,8 @@ deploy:
 2. Frontend sends POST to /api/scan
    ↓
 3. Backend checks in-memory cache
-   ├─ Hit  → Return cached result (<500ms)
-   └─ Miss → Continue to step 4
+   ├─ Hit (not expired)  → Return cached result (<500ms)
+   └─ Miss or Expired    → Continue to step 4
    ↓
 4. Launch Trivy scan subprocess
    ├─ --detection-priority comprehensive
@@ -268,12 +285,14 @@ deploy:
    ├─ Sort by severity
    └─ Detect EOL OS versions
    ↓
-7. Cache result in memory (thread-safe)
+7. Cache result in memory (1 hour expiry)
    ↓
-8. Return to frontend with all metadata
+8. Return to frontend with cache age metadata
    ↓
-9. UI displays beautifully formatted results
+9. UI displays results with pagination (50 per page)
 ```
+
+---
 
 ## 🔒 Security
 
@@ -283,6 +302,8 @@ deploy:
 - ✅ Results cleared on container restart
 - ✅ No network egress except to Docker Hub/registries
 - ✅ Health checks prevent crashing containers
+- ✅ Thread-safe caching with proper locking
+- ✅ Pagination prevents browser memory exhaustion
 
 ---
 
@@ -308,13 +329,18 @@ deploy:
 
 ---
 
----
----
-## Demo
+## 🎬 Demo
 
-https://github.com/user-attachments/assets/2c78d4bd-e462-438f-be4b-f150c7a955dd
----
+Check out the demo video showing the scanner in action:
 
+[Demo Video](https://github.com/user-attachments/assets/2c78d4bd-e462-438f-be4b-f150c7a955dd)
+
+Features demonstrated:
+- Real-time scanning
+- Cache hits and age display
+- Vulnerability pagination
+- EOL warnings
+- Beautiful dark UI
 
 ---
 
@@ -332,3 +358,7 @@ MIT License - See LICENSE file for details
 - **Docker** - Container platform
 
 ---
+
+**Built with ❤️ for container security**
+
+Last Updated: January 2025
