@@ -44,7 +44,7 @@ services:
       - "32780:3000"
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_started
     environment:
       - REACT_APP_API_URL=/container-scanner/api
     networks:
