@@ -8,6 +8,7 @@ function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [cached, setCached] = useState(false);
+  const [cacheAge, setCacheAge] = useState(null);
   const [trivyStatus, setTrivyStatus] = useState(null);
   const API_BASE = process.env.REACT_APP_API_URL || '/container-scanner/api';
 
@@ -36,6 +37,7 @@ function App() {
     setError('');
     setResult(null);
     setCached(false);
+    setCacheAge(null);
 
     try {
       const response = await axios.post(`${API_BASE}/api/scan`, {
@@ -44,11 +46,13 @@ function App() {
 
       setResult(response.data);
       setCached(response.data.cached === true);
+      if (response.data.cache_age_hours) {
+        setCacheAge(response.data.cache_age_hours);
+      }
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Scan failed. Make sure the image exists.';
       setError(errorMsg);
       
-      // If it's a database update issue, provide more helpful guidance
       if (err.response?.data?.status === 'db_update_needed') {
         setError(errorMsg + ' Trivy is updating its vulnerability database. Please wait a moment and try again.');
       }
@@ -134,10 +138,15 @@ function App() {
                 <span>{result.warning}</span>
               </div>
             )}
+            
             <div className="result-header">
               <div>
                 <h2>Scan Results</h2>
-                {cached && <span className="cache-badge">📦 Cached Result</span>}
+                {cached && (
+                    <span className="cache-badge">
+                        📦 Cached {cacheAge}h ago
+                    </span>
+                )}
               </div>
               <span className="image-name">{result.image}</span>
             </div>
@@ -216,26 +225,11 @@ function App() {
                         <div className="detail references">
                           <strong>References:</strong>
                           <div className="ref-list">
-                            {vuln.references.map((ref, i) => {
-                              let displayName = ref.replace('https://', '').replace('http://', '').split('/')[0];
-                              if (ref.includes('cve.mitre')) displayName = '🔗 CVE MITRE';
-                              if (ref.includes('nvd.nist')) displayName = '🔗 NVD NIST';
-                              if (ref.includes('ubuntu.com')) displayName = '🔗 Ubuntu';
-                              if (ref.includes('debian')) displayName = '🔗 Debian';
-                              if (ref.includes('redhat')) displayName = '🔗 Red Hat';
-                              if (ref.includes('openwall')) displayName = '🔗 OpenWall';
-                              if (ref.includes('bugzilla')) displayName = '🔗 Bugzilla';
-                              if (ref.includes('rockyl')) displayName = '🔗 Rocky';
-                              if (ref.includes('almalinux')) displayName = '🔗 AlmaLinux';
-                              if (ref.includes('oracle')) displayName = '🔗 Oracle';
-                              if (ref.includes('sourceware')) displayName = '🔗 SourceWare';
-                              
-                              return (
-                                <a key={i} href={ref} target="_blank" rel="noopener noreferrer" className="ref-link" title={ref}>
-                                  {displayName}
-                                </a>
-                              );
-                            })}
+                            {vuln.references.map((ref, i) => (
+                              <a key={i} href={ref} target="_blank" rel="noopener noreferrer" className="ref-link">
+                                {ref.replace('https://', '').replace('http://', '').split('/')[0]}
+                              </a>
+                            ))}
                           </div>
                         </div>
                       )}
@@ -252,7 +246,7 @@ function App() {
         )}
 
         <div className="footer-info">
-          <p>💡 <strong>Tip:</strong> First scan takes longer (downloads image + DB update). Subsequent scans use cache.</p>
+          <p>💡 <strong>Tip:</strong> First scan takes longer (downloads image + DB update). Subsequent scans use cache (refreshed hourly).</p>
           <p>📊 Supports all registries: Docker Hub, ECR, GCR, custom registries</p>
         </div>
       </div>
