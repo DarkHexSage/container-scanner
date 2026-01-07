@@ -142,11 +142,11 @@ function App() {
             <div className="result-header">
               <div>
                 <h2>Scan Results</h2>
-                {cached && (
+                {cached && cacheAge !== null && (
                     <span className="cache-badge">
                         📦 Cached {cacheAge}h ago
                     </span>
-                )}
+                )}    
               </div>
               <span className="image-name">{result.image}</span>
             </div>
