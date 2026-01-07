@@ -358,7 +358,3 @@ MIT License - See LICENSE file for details
 - **Docker** - Container platform
 
 ---
-
-**Built with ❤️ for container security**
-
-Last Updated: January 2025
