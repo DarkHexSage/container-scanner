@@ -10,7 +10,11 @@ function App() {
   const [cached, setCached] = useState(false);
   const [cacheAge, setCacheAge] = useState(null);
   const [trivyStatus, setTrivyStatus] = useState(null);
-  const API_BASE = process.env.REACT_APP_API_URL || '/container-scanner/api';
+  const [currentPage, setCurrentPage] = useState(1);
+  const [cacheStats, setCacheStats] = useState(null);
+  const [showStats, setShowStats] = useState(false);
+  const VULNS_PER_PAGE = 50;
+  const API_BASE = process.env.REACT_APP_API_URL || '/api';
 
   // Check Trivy status on mount
   useEffect(() => {
@@ -23,7 +27,19 @@ function App() {
       }
     };
     checkTrivy();
+    
+    // Load cache stats
+    loadCacheStats();
   }, []);
+
+  const loadCacheStats = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/cache-stats`);
+      setCacheStats(response.data);
+    } catch (err) {
+      console.error('Failed to load cache stats:', err);
+    }
+  };
 
   const handleScan = async (e) => {
     e.preventDefault();
@@ -38,6 +54,7 @@ function App() {
     setResult(null);
     setCached(false);
     setCacheAge(null);
+    setCurrentPage(1);
 
     try {
       const response = await axios.post(`${API_BASE}/api/scan`, {
@@ -49,6 +66,7 @@ function App() {
       if (response.data.cache_age_hours) {
         setCacheAge(response.data.cache_age_hours);
       }
+      loadCacheStats();
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Scan failed. Make sure the image exists.';
       setError(errorMsg);
@@ -78,6 +96,12 @@ function App() {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  // Pagination logic
+  const startIdx = (currentPage - 1) * VULNS_PER_PAGE;
+  const endIdx = startIdx + VULNS_PER_PAGE;
+  const paginatedVulns = result?.vulnerabilities?.slice(startIdx, endIdx) || [];
+  const totalPages = Math.ceil((result?.vulnerabilities?.length || 0) / VULNS_PER_PAGE);
+
   return (
     <div className="container">
       <div className="scanner">
@@ -100,7 +124,45 @@ function App() {
               )}
             </div>
           )}
+
+          <button className="stats-btn" onClick={() => setShowStats(!showStats)}>
+            📊 Cache Stats
+          </button>
         </div>
+
+        {showStats && cacheStats && (
+          <div className="cache-stats-box">
+            <h3>Cache Statistics</h3>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-value">{cacheStats.memory_cache_entries}</div>
+                <div className="stat-label">Memory Cache</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{cacheStats.database_cache_entries}</div>
+                <div className="stat-label">Database Cache</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{cacheStats.total_scans_history}</div>
+                <div className="stat-label">Total Scans</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{cacheStats.average_vulns_per_scan}</div>
+                <div className="stat-label">Avg Vulns/Scan</div>
+              </div>
+            </div>
+            {cacheStats.recent_scans && cacheStats.recent_scans.length > 0 && (
+              <div className="recent-scans">
+                <h4>Recent Scans</h4>
+                <ul>
+                  {cacheStats.recent_scans.map((scan, idx) => (
+                    <li key={idx}>{scan.image} • {new Date(scan.time).toLocaleString()}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleScan} className="scan-form">
           <input
@@ -146,7 +208,12 @@ function App() {
                     <span className="cache-badge">
                         📦 Cached {cacheAge}h ago
                     </span>
-                )}    
+                )}
+                {cached && result.cache_source && (
+                    <span className="cache-source">
+                        ({result.cache_source === 'memory' ? 'Memory' : 'Database'})
+                    </span>
+                )}
               </div>
               <span className="image-name">{result.image}</span>
             </div>
@@ -180,9 +247,10 @@ function App() {
               <div className="vulnerabilities-list">
                 <h3>Found {result.vulnerabilities.length} Vulnerabilities</h3>
                 <div className="filter-info">
-                  Showing all severity levels • Sorted by severity
+                  Showing {startIdx + 1}-{Math.min(endIdx, result.vulnerabilities.length)} of {result.vulnerabilities.length} • Sorted by severity
                 </div>
-                {result.vulnerabilities.map((vuln, idx) => (
+
+                {paginatedVulns.map((vuln, idx) => (
                   <div key={idx} className="vulnerability-item" style={{borderLeftColor: getSeverityColor(vuln.severity)}}>
                     <div className="vuln-header">
                       <span className="severity-badge" style={{backgroundColor: getSeverityColor(vuln.severity)}}>
@@ -236,6 +304,28 @@ function App() {
                     </div>
                   </div>
                 ))}
+
+                {totalPages > 1 && (
+                  <div className="pagination">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                      disabled={currentPage === 1}
+                      className="pagination-btn"
+                    >
+                      ← Previous
+                    </button>
+                    <span className="page-info">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                      disabled={currentPage === totalPages}
+                      className="pagination-btn"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="success-box">
@@ -247,7 +337,7 @@ function App() {
 
         <div className="footer-info">
           <p>💡 <strong>Tip:</strong> First scan takes 30-90s. Repeated scans cached for 1 hour and return in <500ms.</p>
-          <p>📊 Supports all registries: Docker Hub, ECR, GCR, custom registries</p>
+          <p>📊 Supports all registries: Docker Hub, ECR, GCR, custom registries • 📦 Persistent cache across restarts</p>
         </div>
       </div>
     </div>
