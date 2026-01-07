@@ -281,7 +281,7 @@ function App() {
                       )}
                       {vuln.cvss && (
                         <div className="detail">
-                          <strong>CVSS Score:</strong> {vuln.cvss.redhat?.V3Score || vuln.cvss.nvd?.V3Score || 'N/A'}
+                          <strong>CVSS:</strong> {JSON.stringify(vuln.cvss)}
                         </div>
                       )}
                       {vuln.cwe && vuln.cwe.length > 0 && (
@@ -336,7 +336,7 @@ function App() {
         )}
 
         <div className="footer-info">
-          <p>💡 <strong>Tip:</strong> First scan takes 30-90s. Repeated scans cached for 1 hour and return in {`<500ms`}.</p>
+          <p>💡 <strong>Tip:</strong> First scan takes 30-90s. Repeated scans cached for 1 hour and return in 500ms.</p>
           <p>📊 Supports all registries: Docker Hub, ECR, GCR, custom registries • 📦 Persistent cache across restarts</p>
         </div>
       </div>
