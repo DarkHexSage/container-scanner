@@ -1,32 +1,41 @@
-FROM python:3.11-slim
-
-# Install dependencies for Trivy and security tools
-RUN apt-get update && \
-    apt-get install -y \
-    curl \
-    gnupg \
-    ca-certificates \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Trivy using official method with version pinning
-RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin && \
-    trivy --version && \
-    trivy image --download-db-only
-
-# Pre-warm the vulnerability database for better first-scan performance
-RUN trivy image --download-db-only && trivy image --detection-priority comprehensive --severity CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN --format json --quiet alpine:latest > /dev/null 2>&1 || true
+# Multi-stage build
+FROM node:18-alpine AS frontend-build
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy npm config
+COPY .npmrc ./
 
-COPY app.py .
+# Copy package files
+COPY package*.json ./
 
-EXPOSE 5000
+# Install dependencies with retries
+RUN npm install || npm install || npm install
 
-# Run in production mode with gunicorn for better performance
-RUN pip install --no-cache-dir gunicorn==21.2.0
+# Copy source
+COPY public ./public
+COPY src ./src
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--worker-class", "sync", "--timeout", "600", "app:app"]
+# Build
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install serve to run built app
+RUN npm install -g serve
+
+# Copy built app from build stage
+COPY --from=frontend-build /app/build ./build
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# Run serve
+CMD ["serve", "-s", "build", "-l", "3000"]
