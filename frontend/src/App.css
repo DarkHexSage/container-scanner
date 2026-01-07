@@ -77,6 +77,10 @@ body::after {
   -webkit-backdrop-filter: blur(25px);
 }
 
+.header-section {
+  margin-bottom: 35px;
+}
+
 h1 {
   color: #00ff41;
   margin-bottom: 12px;
@@ -89,10 +93,40 @@ h1 {
 
 .subtitle {
   color: rgba(0, 255, 65, 0.8);
-  margin-bottom: 35px;
+  margin-bottom: 20px;
   font-size: 15px;
   font-weight: 400;
   letter-spacing: 0.3px;
+}
+
+.trivy-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid;
+  font-family: 'Roboto Mono', monospace;
+  letter-spacing: 0.2px;
+}
+
+.trivy-status.ready {
+  background: rgba(0, 255, 65, 0.1);
+  border-color: rgba(0, 255, 65, 0.4);
+  color: #00ff41;
+}
+
+.trivy-status.error {
+  background: rgba(255, 68, 68, 0.1);
+  border-color: rgba(255, 68, 68, 0.4);
+  color: #ff6666;
+}
+
+.trivy-status .status-icon {
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .scan-form {
@@ -146,6 +180,11 @@ h1 {
   transition: all 0.3s ease;
   letter-spacing: 0.5px;
   font-family: 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 140px;
 }
 
 .scan-btn:hover:not(:disabled) {
@@ -154,9 +193,26 @@ h1 {
 }
 
 .scan-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Loading Spinner */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(10, 14, 39, 0.3);
+  border-top-color: #0a0e27;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-box {
@@ -173,6 +229,28 @@ h1 {
   font-weight: 500;
   letter-spacing: 0.2px;
   font-family: 'Courier New', monospace;
+  animation: slideIn 0.3s ease;
+}
+
+.warning-box {
+  background: rgba(255, 165, 0, 0.1);
+  border: 2px solid rgba(255, 165, 0, 0.4);
+  padding: 16px 20px;
+  border-radius: 6px;
+  margin-bottom: 25px;
+  color: #ffb84d;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  font-family: 'Courier New', monospace;
+  animation: slideIn 0.3s ease;
+}
+
+.warning-icon {
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 .error-icon {
@@ -213,6 +291,19 @@ h1 {
   font-family: 'Courier New', monospace;
 }
 
+.cache-badge {
+  display: inline-block;
+  background: rgba(0, 255, 65, 0.15);
+  border: 1px solid rgba(0, 255, 65, 0.4);
+  color: #00ff41;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  margin-top: 8px;
+}
+
 .image-name {
   background: rgba(15, 25, 40, 0.6);
   padding: 8px 14px;
@@ -223,6 +314,7 @@ h1 {
   border: 2px solid rgba(0, 255, 65, 0.3);
   font-weight: 500;
   letter-spacing: 0.2px;
+  word-break: break-all;
 }
 
 .summary-cards {
@@ -278,6 +370,13 @@ h1 {
   box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
 }
 
+.summary-card.unknown {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(88, 28, 135, 0.1));
+  border-color: #8b5cf6;
+  color: #a78bfa;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+
 .summary-card .number {
   font-size: 32px;
   margin-bottom: 8px;
@@ -312,12 +411,20 @@ h1 {
 
 .vulnerabilities-list h3 {
   color: #00ff41;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.3px;
   text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
   font-family: 'Courier New', monospace;
+}
+
+.filter-info {
+  color: rgba(0, 255, 65, 0.6);
+  font-size: 12px;
+  margin-bottom: 20px;
+  font-style: italic;
+  letter-spacing: 0.2px;
 }
 
 .vulnerability-item {
@@ -343,6 +450,7 @@ h1 {
   align-items: center;
   gap: 14px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .severity-badge {
@@ -353,6 +461,7 @@ h1 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .vuln-id {
@@ -361,6 +470,13 @@ h1 {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.2px;
+  word-break: break-all;
+}
+
+.vuln-date {
+  color: rgba(0, 255, 65, 0.6);
+  font-size: 12px;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .vulnerability-item h4 {
@@ -400,6 +516,53 @@ h1 {
   margin-right: 8px;
   font-weight: 600;
   text-shadow: 0 0 5px rgba(0, 255, 65, 0.2);
+}
+
+.detail.references {
+  flex-direction: column;
+}
+
+.ref-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ref-link {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 4px;
+  color: #00ff41;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  letter-spacing: 0.1px;
+}
+
+.ref-link:hover {
+  background: rgba(0, 255, 65, 0.2);
+  border-color: rgba(0, 255, 65, 0.5);
+}
+
+.footer-info {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+.footer-info p {
+  color: rgba(0, 255, 65, 0.7);
+  font-size: 12px;
+  margin: 8px 0;
+  letter-spacing: 0.2px;
+}
+
+.footer-info strong {
+  color: #00ff41;
 }
 
 /* Scrollbar Styling */
@@ -449,5 +612,10 @@ h1 {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .vuln-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
